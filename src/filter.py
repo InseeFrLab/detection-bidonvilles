@@ -164,3 +164,64 @@ class RILFilter:
         if intersection_area / geom.area < self.area_pct_threshold:
             return False
         return True
+
+    
+class BDTOPOFilter:
+    """
+    Filter for BDTOPO-labeled images.
+    """
+    
+    def __init__(self):
+                self,
+        dep: Literal["971", "972", "973", "974", "976", "977", "978"],
+        delta_threshold: int,
+        area_pct_threshold: float,
+    ):
+        """
+        Constructor.
+
+        Args:
+            dep (Literal): Departement.
+            delta_threshold (int): Max number of days between label date and
+                image date.
+        """
+        self.dep = dep
+        self.delta_threshold = delta_threshold
+
+    def validate(
+        self,
+        labeled_image: Union[
+            SegmentationLabeledSatelliteImage, DetectionLabeledSatelliteImage
+        ],
+    ):
+        """
+        Return True if labeled image passes all controls.
+
+        Args:
+            labeled_image (Union[SegmentationLabeledSatelliteImage,
+                DetectionLabeledSatelliteImage]): Labeled image.
+        """
+        return self.validate_labeling_date(labeled_image)
+
+    def validate_labeling_date(
+        self,
+        labeled_image: Union[
+            SegmentationLabeledSatelliteImage, DetectionLabeledSatelliteImage
+        ],
+    ):
+        """
+        Return True if labeled image passes date controls.
+
+        Args:
+            labeled_image (Union[SegmentationLabeledSatelliteImage,
+                DetectionLabeledSatelliteImage]): Labeled image.
+        """
+        labeling_date = labeled_image.labeling_date
+        image_date = labeled_image.satellite_image.date
+
+        # Filter image if labeling date is too far from image date
+        delta = labeling_date - image_date
+        delta = abs(delta.days)
+        if delta > self.delta_threshold:
+            return False
+        return True
